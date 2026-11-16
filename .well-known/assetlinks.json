@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.iboxli.app",
+    "sha256_cert_fingerprints": ["BB:EF:58:DB:FE:41:A2:81:43:77:CB:D5:C0:4C:7B:77:CE:B1:9A:CD:FF:FA:58:A0:D8:3B:80:52:AE:D8:05:A4"]
+  }
+}]
