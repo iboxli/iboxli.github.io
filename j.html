@@ -126,8 +126,8 @@
   // WeChat blockiert das Öffnen anderer Apps -> Hinweis, die Seite im Browser zu öffnen
   if (wechat) { var w = document.getElementById("wx"); w.textContent = T.wx; w.style.display = "block";
                 document.body.style.paddingTop = "90px"; }
-  // Android: App direkt versuchen; ohne App kommt man mit nf=1 auf diese Seite zurück
-  if (android && !wechat && !q.get("nf") && c.length === 6) location.href = intent;
+  // Kein automatisches Öffnen: Xiaomi/WhatsApp blockieren das und schließen die Seite.
+  // Der Knopf „In iboxli öffnen“ (Tippen) funktioniert zuverlässig.
 })();
 </script>
 </body>

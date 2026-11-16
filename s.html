@@ -50,10 +50,10 @@
 
   <button class="btn primary" id="play">▶ <span id="tPlay">Jetzt anhören</span></button>
   <div class="live" id="live">Live</div>
+  <a class="btn secondary" id="openApp" style="display:none;border-color:var(--mint);color:var(--mint)"><span id="tOpen">App schon installiert? In iboxli öffnen</span></a>
   <!-- Link setzt das Skript (STORE). Leer = noch nicht im Play Store -->
   <a class="btn secondary" id="dl" href="https://play.google.com" target="_blank" rel="noopener"><span id="tDl">Zum Google Play Store</span></a>
   <div class="hint" id="hint"></div>
-  <a class="applink" id="openApp" style="display:none"><span id="tOpen">App schon installiert? In iboxli öffnen</span></a>
   <audio id="audio" preload="none"></audio>
 </div>
 <script>
@@ -213,9 +213,9 @@
     // Kleiner Link: direkt das App-Schema (iboxli://). Das klappt auch in Browsern und
     // In-App-Browsern, die intent://-Links ignorieren (z. B. in China ohne Google-Dienste).
     var o = document.getElementById("openApp");
-    o.href = "iboxli://station" + location.search.replace(/[?&]nf=1/, "");
-    o.style.display = "block";
-    if (!q.get("nf") && !wechat) location.href = intent;
+    o.href = wechat ? "iboxli://station" + location.search.replace(/[?&]nf=1/, "") : intent;
+    o.style.display = "flex";
+    // Kein automatisches Öffnen (Xiaomi/WhatsApp blockieren es) – Knopf antippen
   }
 
   // Im Browser anhören
