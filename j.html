@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iboxli</title>
+<!-- Vorschau in WhatsApp, Telegram & Co. (ohne Spracherkennung -> zweisprachig) -->
+<meta property="og:title" content="Gemeinsam hören · Listen together · iboxli">
+<meta property="og:description" content="🎧 iboxli">
+<meta property="og:image" content="https://iboxli.github.io/together.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="iboxli">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="iboxli">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+       background:#061820;color:#E2F1F3;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .card{max-width:360px;width:calc(100% - 40px);background:#112A35;border-radius:24px;padding:28px 24px;text-align:center}
+  .brand{display:flex;align-items:center;justify-content:center;gap:10px;color:#8FAAB1;font-weight:600;margin-bottom:18px}
+  .brand img{width:28px;height:28px;border-radius:8px}
+  .sym{width:64px;height:64px;margin:0 auto 6px;display:block}
+  h1{font-size:22px;margin:0 0 6px}
+  p{color:#B3CDD3;font-size:15px;line-height:1.5;margin:8px 0}
+  .code{font-size:40px;font-weight:600;letter-spacing:6px;color:#2EE6A8;margin:14px 0;direction:ltr}
+  a.btn{display:block;margin-top:18px;padding:14px;border-radius:28px;background:#2EE6A8;color:#003828;
+        text-decoration:none;font-weight:600;font-size:16px}
+  .small{font-size:13px;color:#8FAAB1;margin-top:16px}
+  .wx{display:none;position:fixed;top:0;left:0;right:0;padding:14px 64px 14px 18px;background:#2EE6A8;
+      color:#00382a;font-size:15px;font-weight:700;line-height:1.4;z-index:9}
+  .wx::after{content:"↗";position:absolute;right:20px;top:6px;font-size:34px}
+</style>
+</head>
+<body>
+<div class="wx" id="wx"></div>
+<div class="card">
+  <div class="brand"><img src="icon.png" alt=""> iboxli</div>
+  <svg class="sym" viewBox="0 0 24 24" aria-hidden="true">
+    <g fill="none" stroke="#2EE6A8" stroke-width="1.8" stroke-linecap="round">
+      <circle cx="12" cy="11" r="2.5"/><path d="M7 20c0-3 2.2-5 5-5s5 2 5 5"/>
+      <circle cx="5" cy="12.5" r="1.8"/><path d="M1.5 20c0-2.3 1.5-3.8 3.5-3.8"/>
+      <circle cx="19" cy="12.5" r="1.8"/><path d="M22.5 20c0-2.3-1.5-3.8-3.5-3.8"/></g>
+    <ellipse cx="18.2" cy="6.4" rx="1.6" ry="1.2" fill="#2EE6A8"/>
+    <path d="M19.7 6.3V1.5q2.4.8 2.4 3" fill="none" stroke="#2EE6A8" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>
+  <h1 id="tTitle">Listen together</h1>
+  <p id="tInv"></p>
+  <div class="code" id="code">––––––</div>
+  <a class="btn" id="open" href="#"></a>
+  <p class="small" id="tManual"></p>
+  <p class="small" id="tNoApp"></p>
+</div>
+<script>
+(function () {
+  // Play-Store-Link: leer, solange iboxli noch nicht im Play Store ist
+  var STORE = "";   // später: "https://play.google.com/store/apps/details?id=com.iboxli.app"
+  var L = {
+    de:{t:"Gemeinsam hören", inv:"Du wurdest eingeladen, auf <b>iboxli</b> mitzuhören.", open:"In iboxli öffnen",
+        man:"Öffnet sich die App nicht? In iboxli ⋮ › <b>Gemeinsam</b> tippen und den Code eingeben.",
+        soon:"Noch kein iboxli? Die App gibt es bald im Google Play Store.", get:"iboxli herunterladen",
+        wx:"Um iboxli zu öffnen: oben rechts auf ··· tippen und „Im Browser öffnen“ wählen."},
+    en:{t:"Listen together", inv:"You've been invited to listen along on <b>iboxli</b>.", open:"Open in iboxli",
+        man:"App doesn't open? In iboxli tap ⋮ › <b>Together</b> and enter the code.",
+        soon:"No iboxli yet? The app is coming soon to Google Play.", get:"Get iboxli",
+        wx:"To open iboxli: tap ··· at the top right and choose “Open in browser”."},
+    fr:{t:"Écouter ensemble", inv:"Tu es invité(e) à écouter en direct sur <b>iboxli</b>.", open:"Ouvrir dans iboxli",
+        man:"L’appli ne s’ouvre pas ? Dans iboxli, touche ⋮ › <b>Ensemble</b> et saisis le code.",
+        soon:"Pas encore iboxli ? L’appli arrive bientôt sur Google Play.", get:"Télécharger iboxli",
+        wx:"Pour ouvrir iboxli : touche ··· en haut à droite puis « Ouvrir dans le navigateur »."},
+    it:{t:"Ascoltiamo insieme", inv:"Sei stato invitato ad ascoltare insieme su <b>iboxli</b>.", open:"Apri in iboxli",
+        man:"L’app non si apre? In iboxli tocca ⋮ › <b>Insieme</b> e inserisci il codice.",
+        soon:"Non hai ancora iboxli? L’app arriva presto su Google Play.", get:"Scarica iboxli",
+        wx:"Per aprire iboxli: tocca ··· in alto a destra e scegli «Apri nel browser»."},
+    es:{t:"Escuchar juntos", inv:"Te han invitado a escuchar juntos en <b>iboxli</b>.", open:"Abrir en iboxli",
+        man:"¿No se abre la app? En iboxli toca ⋮ › <b>Juntos</b> e introduce el código.",
+        soon:"¿Aún no tienes iboxli? La app llegará pronto a Google Play.", get:"Descargar iboxli",
+        wx:"Para abrir iboxli: toca ··· arriba a la derecha y elige «Abrir en el navegador»."},
+    ru:{t:"Слушать вместе", inv:"Вас пригласили слушать вместе в <b>iboxli</b>.", open:"Открыть в iboxli",
+        man:"Приложение не открывается? В iboxli нажмите ⋮ › <b>Вместе</b> и введите код.",
+        soon:"Ещё нет iboxli? Приложение скоро появится в Google Play.", get:"Скачать iboxli",
+        wx:"Чтобы открыть iboxli: нажмите ··· справа вверху и выберите «Открыть в браузере»."},
+    zh:{t:"一起听", inv:"你被邀请在 <b>iboxli</b> 上一起收听。", open:"在 iboxli 中打开",
+        man:"应用没有打开？在 iboxli 中点击 ⋮ › <b>一起听</b>，然后输入代码。",
+        soon:"还没有 iboxli？应用即将登陆 Google Play。", get:"下载 iboxli",
+        wx:"要打开 iboxli：请点击右上角 ··· ，选择「在浏览器打开」。"},
+    hi:{t:"साथ में सुनें", inv:"आपको <b>iboxli</b> पर साथ सुनने के लिए आमंत्रित किया गया है।", open:"iboxli में खोलें",
+        man:"ऐप नहीं खुल रहा? iboxli में ⋮ › <b>साथ में</b> पर टैप करें और कोड डालें।",
+        soon:"अभी iboxli नहीं है? ऐप जल्द ही Google Play पर आ रहा है।", get:"iboxli डाउनलोड करें",
+        wx:"iboxli खोलने के लिए: ऊपर दाईं ओर ··· पर टैप करें और “ब्राउज़र में खोलें” चुनें।"},
+    ar:{t:"استمعوا معًا", inv:"تمت دعوتك للاستماع معًا على <b>iboxli</b>.", open:"افتح في iboxli",
+        man:"لا يفتح التطبيق؟ في iboxli اضغط ⋮ › <b>معًا</b> وأدخل الرمز.",
+        soon:"لا تملك iboxli بعد؟ التطبيق قريبًا على Google Play.", get:"تنزيل iboxli",
+        wx:"لفتح iboxli: اضغط ··· أعلى اليمين واختر «فتح في المتصفح»."}
+  };
+  // Sprache des Handys (Browser), sonst Englisch
+  var langs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"]);
+  var lang = "en";
+  for (var i = 0; i < langs.length; i++) { var k = (langs[i] || "").toLowerCase().slice(0, 2); if (L[k]) { lang = k; break; } }
+  var T = L[lang];
+  document.documentElement.lang = lang;
+  if (lang === "ar") document.documentElement.dir = "rtl";
+  document.title = T.t + " · iboxli";
+  document.getElementById("tTitle").textContent = T.t;
+  document.getElementById("tInv").innerHTML = T.inv;
+  document.getElementById("tManual").innerHTML = T.man;
+
+  var q = new URLSearchParams(location.search);
+  var c = (q.get("c") || "").replace(/\D/g, "").slice(0, 6);
+  if (c.length === 6) document.getElementById("code").textContent = c.slice(0, 3) + " " + c.slice(3);
+
+  var ua = navigator.userAgent, android = /android/i.test(ua), ios = /iphone|ipad|ipod/i.test(ua);
+  var wechat = /MicroMessenger/i.test(ua);
+  var open = document.getElementById("open");
+  open.textContent = T.open;
+  var fallback = location.href + (location.search ? "&" : "?") + "nf=1";
+  var intent = "intent://join?c=" + c + "#Intent;scheme=iboxli;package=com.iboxli.app;" +
+               "S.browser_fallback_url=" + encodeURIComponent(fallback) + ";end";
+  open.href = android && !wechat ? intent : "iboxli://join?c=" + c;
+
+  // Ohne App: Hinweis auf den Play Store (bzw. „bald verfügbar“)
+  var noApp = document.getElementById("tNoApp");
+  if (STORE && !ios) noApp.innerHTML = '<a href="' + STORE + '" style="color:#2EE6A8">' + T.get + '</a>';
+  else if (!ios) noApp.textContent = T.soon;
+
+  // WeChat blockiert das Öffnen anderer Apps -> Hinweis, die Seite im Browser zu öffnen
+  if (wechat) { var w = document.getElementById("wx"); w.textContent = T.wx; w.style.display = "block";
+                document.body.style.paddingTop = "90px"; }
+  // Android: App direkt versuchen; ohne App kommt man mit nf=1 auf diese Seite zurück
+  if (android && !wechat && !q.get("nf") && c.length === 6) location.href = intent;
+})();
+</script>
+</body>
+</html>

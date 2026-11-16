@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iboxli</title>
+<meta property="og:title" content="iboxli">
+<meta property="og:description" content="Radio &amp; Podcasts · iboxli 🎧">
+<meta property="og:image" content="https://iboxli.github.io/icon.png">
+<meta property="og:type" content="website">
+<style>
+  :root { --bg:#061820; --card:#0f2a35; --mint:#2EE6A8; --teal:#00B3C7; --txt:#eef4f6; --sub:#9fb3bb; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:radial-gradient(circle at 50% 0%, #0c3340 0%, var(--bg) 60%);
+         color:var(--txt); font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+         display:flex; align-items:center; justify-content:center; padding:24px 16px; }
+  .card { width:100%; max-width:420px; background:var(--card); border-radius:28px; padding:28px 24px;
+          text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.4); }
+  .brand { display:flex; align-items:center; justify-content:center; gap:10px; color:var(--sub);
+           font-weight:600; margin-bottom:22px; }
+  .brand img { width:28px; height:28px; border-radius:8px; }
+  .logo { width:160px; height:160px; border-radius:28px; background:#fff; margin:0 auto 18px;
+          display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .logo img { width:88%; height:88%; object-fit:contain; }
+  .logo.fill { background:transparent; }
+  .logo.fill img { width:100%; height:100%; object-fit:cover; }
+  h1 { font-size:26px; margin:0 0 6px; line-height:1.2; }
+  .meta { color:var(--sub); font-size:15px; margin-bottom:24px; }
+  .btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:15px;
+         border-radius:999px; border:0; font-size:17px; font-weight:700; text-decoration:none; cursor:pointer;
+         margin-top:12px; }
+  .primary { background:var(--mint); color:#00382a; }
+  .secondary { background:transparent; color:var(--txt); border:2px solid #2b4a56; }
+  .hint { color:var(--sub); font-size:13px; margin-top:18px; line-height:1.4; }
+  .applink { display:block; margin-top:14px; color:var(--mint); font-size:14px; text-decoration:underline; }
+  .live { display:none; color:#F01E1E; font-weight:700; margin-top:14px; }
+  .live::before { content:"● "; }
+  .wx { display:none; position:fixed; top:0; left:0; right:0; padding:14px 64px 14px 18px; background:var(--mint);
+        color:#00382a; font-size:15px; font-weight:700; line-height:1.4; z-index:9; }
+  .wx::after { content:"↗"; position:absolute; right:20px; top:6px; font-size:34px; }
+</style>
+</head>
+<body>
+<div class="wx" id="wx"></div>
+<div class="card">
+  <div class="brand"><img src="icon.png" alt=""> iboxli</div>
+  <div class="logo" id="logoBox"><img id="logo" alt=""></div>
+  <h1 id="name">Radio</h1>
+  <div class="meta" id="meta"></div>
+
+  <button class="btn primary" id="play">▶ <span id="tPlay">Jetzt anhören</span></button>
+  <div class="live" id="live">Live</div>
+  <!-- Link setzt das Skript (STORE). Leer = noch nicht im Play Store -->
+  <a class="btn secondary" id="dl" href="https://play.google.com" target="_blank" rel="noopener"><span id="tDl">Zum Google Play Store</span></a>
+  <div class="hint" id="hint"></div>
+  <a class="applink" id="openApp" style="display:none"><span id="tOpen">App schon installiert? In iboxli öffnen</span></a>
+  <audio id="audio" preload="none"></audio>
+</div>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  // Kurzlink ?s=… (22 Zeichen) -> UUID
+  function shortToUuid(v) {
+    try {
+      var b = atob(v.replace(/-/g, "+").replace(/_/g, "/")), h = "";
+      for (var i = 0; i < b.length; i++) h += ("0" + b.charCodeAt(i).toString(16)).slice(-2);
+      if (h.length !== 32) return "";
+      return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20);
+    } catch (e) { return ""; }
+  }
+  var id = q.get("id") || (q.get("s") ? shortToUuid(q.get("s")) : "");
+  var st = { name: q.get("n") || "", stream: q.get("u") || "", logo: q.get("f") || "",
+             country: q.get("c") || "", tags: q.get("t") || "" };
+  var lang = (navigator.language || "de").toLowerCase().slice(0, 2);
+  var L = {
+    de: { soon:"iboxli gibt es bald im Google Play Store.", open:"App schon installiert? In iboxli öffnen", play:"Jetzt anhören", stop:"Stopp", dl:"Zum Google Play Store",
+          hint:"Mit der App iboxli für Android hörst du diesen Sender auch im Hintergrund und im Auto und kannst ihn speichern.",
+          hintPod:"Mit der App iboxli für Android hörst du Podcasts im Hintergrund und im Auto, lädst Folgen herunter und machst später an derselben Stelle weiter.",
+          ios:"iboxli gibt es aktuell für Android.", from:"ab", blocked:"Diese Folge ist in deinem Netz nicht erreichbar.",
+          wx:"Um iboxli zu öffnen: oben rechts auf ··· tippen und „Im Browser öffnen“ wählen." },
+    en: { soon:"iboxli is coming soon to Google Play.", open:"Already have the app? Open in iboxli", play:"Listen now", stop:"Stop", dl:"Go to Google Play Store",
+          hint:"With the iboxli app for Android you can listen in the background, in your car and save stations.",
+          hintPod:"With the iboxli app for Android you can listen to podcasts in the background and in your car, download episodes and continue where you left off.",
+          ios:"iboxli is currently available for Android.", from:"from", blocked:"This episode can't be reached on your network.",
+          wx:"To open iboxli: tap ··· at the top right and choose “Open in browser”." },
+    fr: { soon:"iboxli arrive bientôt sur Google Play.", open:"Tu as déjà l’appli ? Ouvrir dans iboxli", play:"Écouter", stop:"Stop", dl:"Vers Google Play Store",
+          hint:"Avec l’appli iboxli pour Android, écoute aussi en arrière-plan et en voiture, et enregistre tes stations.",
+          hintPod:"Avec l’appli iboxli pour Android, écoute tes podcasts en arrière-plan et en voiture, télécharge des épisodes et reprends là où tu t’es arrêté.",
+          ios:"iboxli est disponible sur Android.", from:"à partir de", blocked:"Cet épisode n’est pas accessible sur ton réseau.",
+          wx:"Pour ouvrir iboxli : touche ··· en haut à droite puis « Ouvrir dans le navigateur »." },
+    it: { soon:"iboxli arriva presto su Google Play.", open:"Hai già l’app? Apri in iboxli", play:"Ascolta ora", stop:"Stop", dl:"Vai su Google Play Store",
+          hint:"Con l’app iboxli per Android ascolti anche in background e in auto e puoi salvare le stazioni.",
+          hintPod:"Con l’app iboxli per Android ascolti i podcast in background e in auto, scarichi gli episodi e riprendi da dove eri rimasto.",
+          ios:"iboxli è disponibile per Android.", from:"da", blocked:"Questo episodio non è raggiungibile nella tua rete.",
+          wx:"Per aprire iboxli: tocca ··· in alto a destra e scegli «Apri nel browser»." },
+    es: { soon:"iboxli llegará pronto a Google Play.", open:"¿Ya tienes la app? Abrir en iboxli", play:"Escuchar", stop:"Parar", dl:"Ir a Google Play Store",
+          hint:"Con la app iboxli para Android escuchas en segundo plano y en el coche, y guardas emisoras.",
+          hintPod:"Con la app iboxli para Android escuchas pódcasts en segundo plano y en el coche, descargas episodios y sigues donde lo dejaste.",
+          ios:"iboxli está disponible para Android.", from:"desde", blocked:"Este episodio no está disponible en tu red.",
+          wx:"Para abrir iboxli: toca ··· arriba a la derecha y elige «Abrir en el navegador»." },
+    ru: { soon:"iboxli скоро появится в Google Play.", open:"Приложение уже есть? Открыть в iboxli", play:"Слушать", stop:"Стоп", dl:"В Google Play",
+          hint:"В приложении iboxli для Android можно слушать в фоне и в машине и сохранять станции.",
+          hintPod:"В приложении iboxli для Android можно слушать подкасты в фоне и в машине, скачивать выпуски и продолжать с того же места.",
+          ios:"iboxli доступно для Android.", from:"с", blocked:"Этот выпуск недоступен в вашей сети.",
+          wx:"Чтобы открыть iboxli: нажмите ··· справа вверху и выберите «Открыть в браузере»." },
+    zh: { soon:"iboxli 即将登陆 Google Play。", open:"已安装应用？在 iboxli 中打开", play:"立即收听", stop:"停止", dl:"前往 Google Play 商店",
+          hint:"使用 Android 版 iboxli 应用，可以在后台和车上收听，并收藏电台。",
+          hintPod:"使用 Android 版 iboxli 应用，可在后台和车上收听播客、下载单集，并从上次停下的位置继续。",
+          ios:"iboxli 目前仅支持 Android。", from:"从", blocked:"在你的网络中无法访问这一集。",
+          wx:"要打开 iboxli：请点击右上角 ··· ，选择「在浏览器打开」。" },
+    hi: { soon:"iboxli जल्द ही Google Play पर आ रहा है।", open:"ऐप पहले से है? iboxli में खोलें", play:"अभी सुनें", stop:"रोकें", dl:"Google Play Store पर जाएँ",
+          hint:"Android के लिए iboxli ऐप से आप बैकग्राउंड और कार में सुन सकते हैं और स्टेशन सेव कर सकते हैं।",
+          hintPod:"Android के लिए iboxli ऐप से पॉडकास्ट बैकग्राउंड और कार में सुनें, एपिसोड डाउनलोड करें और वहीं से आगे सुनें।",
+          ios:"iboxli अभी Android के लिए उपलब्ध है।", from:"से", blocked:"यह एपिसोड आपके नेटवर्क में उपलब्ध नहीं है।",
+          wx:"iboxli खोलने के लिए: ऊपर दाईं ओर ··· पर टैप करें और “ब्राउज़र में खोलें” चुनें।" },
+    ar: { soon:"iboxli قريبًا على Google Play.", open:"لديك التطبيق؟ افتح في iboxli", play:"استمع الآن", stop:"إيقاف", dl:"إلى متجر Google Play",
+          hint:"مع تطبيق iboxli لأندرويد تستمع في الخلفية وفي السيارة وتحفظ المحطات.",
+          hintPod:"مع تطبيق iboxli لأندرويد تستمع إلى البودكاست في الخلفية وفي السيارة وتنزّل الحلقات وتكمل من حيث توقفت.",
+          ios:"iboxli متوفر حاليًا لأندرويد.", from:"من", blocked:"هذه الحلقة غير متاحة على شبكتك.",
+          wx:"لفتح iboxli: اضغط ··· أعلى اليمين واختر «فتح في المتصفح»." }
+  };
+  var T = L[lang] || L.en;
+  var de = lang === "de", zh = lang === "zh";
+  document.documentElement.lang = L[lang] ? lang : "en";
+  if (lang === "ar") document.documentElement.dir = "rtl";
+  // WeChat blockiert das Öffnen anderer Apps -> Hinweis, die Seite im Browser zu öffnen
+  var wechat = /MicroMessenger/i.test(navigator.userAgent);
+  if (wechat) { var w = document.getElementById("wx"); w.textContent = T.wx; w.style.display = "block";
+                document.body.style.paddingTop = "90px"; }
+  document.getElementById("tOpen").textContent = T.open;
+  document.getElementById("tPlay").textContent = T.play;
+  document.getElementById("tDl").textContent = T.dl;
+  // Play-Store-Link: leer, solange iboxli noch nicht im Play Store ist
+  var STORE = "";   // später: "https://play.google.com/store/apps/details?id=com.iboxli.app"
+  // iPhone/iPad: App gibt es (noch) nicht -> Play-Store-Knopf ausblenden
+  var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var dl = document.getElementById("dl");
+  if (ios || !STORE) dl.style.display = "none"; else dl.href = STORE;
+  function hintText(t) { return ios ? T.ios : (STORE ? t : t + " " + T.soon); }
+  document.getElementById("hint").textContent = hintText(T.hint);
+
+  var img = document.getElementById("logo"), box = document.getElementById("logoBox"),
+      btn = document.getElementById("play");
+  function useIcon() { box.className = "logo fill"; img.onerror = null; img.src = "icon.png"; }
+
+  function render() {
+    var name = st.name || "Radio";
+    document.title = name + " – iboxli";
+    document.getElementById("name").textContent = name;
+    document.getElementById("meta").textContent =
+      [st.country, st.tags.split(",").slice(0, 3).join(", ")].filter(Boolean).join(" · ");
+    // Ohne Senderlogo: iboxli-Symbol füllt die ganze Kachel (kein weisser Rand)
+    if (st.logo) { box.className = "logo"; img.onerror = useIcon; img.src = st.logo; } else { useIcon(); }
+    btn.style.display = st.stream ? "flex" : "none";
+  }
+  render();
+
+  // ---- Podcast-Folge: ?p=<Podcast>&e=<Folge>&a=<Audio>&t=<Sekunden> ----
+  var pod = q.get("p"), startSec = parseInt(q.get("t") || "0", 10) || 0;
+  function fmt(sec) { var h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, x = sec % 60;
+    return (h ? h + ":" + ("0" + m).slice(-2) : m) + ":" + ("0" + x).slice(-2); }
+  if (pod) {
+    st.stream = q.get("a") || ""; st.isPod = true;
+    document.getElementById("hint").textContent = hintText(T.hintPod);
+    var podName = "";
+    var showMeta = function () {
+      document.getElementById("meta").textContent =
+        [podName, startSec ? T.from + " " + fmt(startSec) : ""].filter(Boolean).join(" · ");
+    };
+    render(); showMeta();
+    // Apple-Podcast-Verzeichnis (JSONP, ohne Server): Name, Cover und Folgentitel
+    window.wrPod = function (data) {
+      var r = (data && data.results) || [], p = r[0] || {}, a = st.stream.split("?")[0], ep = null;
+      for (var i = 1; i < r.length; i++) {
+        var u = (r[i].episodeUrl || "").split("?")[0];
+        if (u && (u === a || u.split("/").pop() === a.split("/").pop())) { ep = r[i]; break; }
+      }
+      podName = p.collectionName || "";
+      st.name = (ep && ep.trackName) || podName || "Podcast";
+      st.logo = (ep && (ep.artworkUrl600 || ep.artworkUrl160)) || p.artworkUrl600 || p.artworkUrl100 || "";
+      render(); box.className = "logo fill"; showMeta();
+    };
+    var js = document.createElement("script");
+    js.src = "https://itunes.apple.com/lookup?id=" + encodeURIComponent(pod) +
+             "&entity=podcastEpisode&limit=200&callback=wrPod";
+    document.body.appendChild(js);
+  }
+
+  // Kurzer Link (nur ?id=…): Senderdaten bei radio-browser.info nachladen
+  if (!pod && id && !st.stream && id.indexOf("custom:") !== 0) {
+    var servers = ["https://de1.api.radio-browser.info", "https://de2.api.radio-browser.info",
+                   "https://fi1.api.radio-browser.info", "https://all.api.radio-browser.info"];
+    (function load(i) {
+      if (i >= servers.length) return;
+      fetch(servers[i] + "/json/stations/byuuid/" + encodeURIComponent(id))
+        .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+        .then(function (a) {
+          var s = a && a[0]; if (!s) return;
+          st.name = s.name || st.name; st.stream = s.url_resolved || s.url || "";
+          st.logo = s.favicon || ""; st.country = s.country || ""; st.tags = s.tags || "";
+          render();
+        })
+        .catch(function () { load(i + 1); });
+    })(0);
+  }
+
+  // Android: zuerst die App versuchen; ohne App bleibt diese Seite (browser_fallback_url mit nf=1)
+  var android = /android/i.test(navigator.userAgent);
+  if (android) {
+    var fallback = location.href + (location.search ? "&" : "?") + "nf=1";
+    var intent = "intent://station" + location.search + "#Intent;scheme=iboxli;package=com.iboxli.app;" +
+                 "S.browser_fallback_url=" + encodeURIComponent(fallback) + ";end";
+    // Kleiner Link: direkt das App-Schema (iboxli://). Das klappt auch in Browsern und
+    // In-App-Browsern, die intent://-Links ignorieren (z. B. in China ohne Google-Dienste).
+    var o = document.getElementById("openApp");
+    o.href = "iboxli://station" + location.search.replace(/[?&]nf=1/, "");
+    o.style.display = "block";
+    if (!q.get("nf") && !wechat) location.href = intent;
+  }
+
+  // Im Browser anhören
+  var audio = document.getElementById("audio"), label = document.getElementById("tPlay"),
+      live = document.getElementById("live");
+  btn.onclick = function () {
+    var stream = st.stream; if (!stream) return;
+    // http-Streams darf eine https-Seite nicht abspielen -> in neuem Tab öffnen
+    if (location.protocol === "https:" && stream.indexOf("http://") === 0) { window.open(stream, "_blank"); return; }
+    if (audio.paused) {
+      if (audio.getAttribute("src") !== stream) {
+        audio.src = stream;
+        // Podcast: an der geteilten Stelle beginnen
+        if (st.isPod && startSec) audio.addEventListener("loadedmetadata", function () { audio.currentTime = startSec; }, { once: true });
+      }
+      audio.onerror = function () { if (st.isPod) document.getElementById("hint").textContent = T.blocked; };
+      audio.play().then(function () { label.textContent = T.stop; if (!st.isPod) live.style.display = "block"; })
+        .catch(function () { if (st.isPod) document.getElementById("hint").textContent = T.blocked; else window.open(stream, "_blank"); });
+    } else if (st.isPod) {
+      audio.pause(); label.textContent = T.play;   // Podcast: Pause, Stelle bleibt
+    } else {
+      audio.pause(); audio.removeAttribute("src"); audio.load();
+      label.textContent = T.play; live.style.display = "none";
+    }
+  };
+})();
+</script>
+</body>
+</html>
