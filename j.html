@@ -27,6 +27,10 @@
   a.btn{display:block;margin-top:18px;padding:14px;border-radius:28px;background:#2EE6A8;color:#003828;
         text-decoration:none;font-weight:600;font-size:16px}
   .small{font-size:13px;color:#8FAAB1;margin-top:16px}
+  .help{display:none;margin-top:18px;padding-top:6px;border-top:1px solid #1E3F4C}
+  a.btn2{display:block;margin-top:10px;padding:12px;border-radius:28px;border:2px solid #2EE6A8;color:#2EE6A8;
+         text-decoration:none;font-weight:600;font-size:15px}
+  #tCopied{color:#2EE6A8}
   .wx{display:none;position:fixed;top:0;left:0;right:0;padding:14px 64px 14px 18px;background:#2EE6A8;
       color:#00382a;font-size:15px;font-weight:700;line-height:1.4;z-index:9}
   .wx::after{content:"↗";position:absolute;right:20px;top:6px;font-size:34px}
@@ -48,6 +52,12 @@
   <p id="tInv"></p>
   <div class="code" id="code">––––––</div>
   <a class="btn" id="open" href="#"></a>
+  <div class="help" id="help">
+    <p id="tHint"></p>
+    <a class="btn2" id="copy" href="#"></a>
+    <a class="btn2" id="retry" href="#" target="_blank" rel="noopener"></a>
+    <p class="small" id="tCopied"></p>
+  </div>
   <p class="small" id="tManual"></p>
   <p class="small" id="tNoApp"></p>
 </div>
@@ -56,39 +66,48 @@
   // Play-Store-Link: leer, solange iboxli noch nicht im Play Store ist
   var STORE = "";   // später: "https://play.google.com/store/apps/details?id=com.iboxli.app"
   var L = {
-    de:{t:"Gemeinsam hören", inv:"Du wurdest eingeladen, auf <b>iboxli</b> mitzuhören.", open:"In iboxli öffnen",
+    de:{hint:"Geht iboxli nicht auf? Das passiert oft, wenn der Link aus WhatsApp kommt.", copy:"Code kopieren", copied:"Code kopiert! In iboxli ⋮ › <b>Gemeinsam</b> › Mithören einfügen.", retry:"In neuem Tab nochmal versuchen",
+        t:"Gemeinsam hören", inv:"Du wurdest eingeladen, auf <b>iboxli</b> mitzuhören.", open:"In iboxli öffnen",
         man:"Öffnet sich die App nicht? In iboxli ⋮ › <b>Gemeinsam</b> tippen und den Code eingeben.",
         soon:"Noch kein iboxli? Die App gibt es bald im Google Play Store.", get:"iboxli herunterladen",
         wx:"Um iboxli zu öffnen: oben rechts auf ··· tippen und „Im Browser öffnen“ wählen."},
-    en:{t:"Listen together", inv:"You've been invited to listen along on <b>iboxli</b>.", open:"Open in iboxli",
+    en:{hint:"iboxli didn\u2019t open? This often happens when the link comes from WhatsApp.", copy:"Copy code", copied:"Code copied! Paste it in iboxli ⋮ › <b>Together</b> › Listen.", retry:"Try again in a new tab",
+        t:"Listen together", inv:"You've been invited to listen along on <b>iboxli</b>.", open:"Open in iboxli",
         man:"App doesn't open? In iboxli tap ⋮ › <b>Together</b> and enter the code.",
         soon:"No iboxli yet? The app is coming soon to Google Play.", get:"Get iboxli",
         wx:"To open iboxli: tap ··· at the top right and choose “Open in browser”."},
-    fr:{t:"Écouter ensemble", inv:"Tu es invité(e) à écouter en direct sur <b>iboxli</b>.", open:"Ouvrir dans iboxli",
+    fr:{hint:"iboxli ne s\u2019ouvre pas ? C\u2019est fréquent quand le lien vient de WhatsApp.", copy:"Copier le code", copied:"Code copié ! Colle-le dans iboxli ⋮ › <b>Ensemble</b> › Écouter.", retry:"Réessayer dans un nouvel onglet",
+        t:"Écouter ensemble", inv:"Tu es invité(e) à écouter en direct sur <b>iboxli</b>.", open:"Ouvrir dans iboxli",
         man:"L’appli ne s’ouvre pas ? Dans iboxli, touche ⋮ › <b>Ensemble</b> et saisis le code.",
         soon:"Pas encore iboxli ? L’appli arrive bientôt sur Google Play.", get:"Télécharger iboxli",
         wx:"Pour ouvrir iboxli : touche ··· en haut à droite puis « Ouvrir dans le navigateur »."},
-    it:{t:"Ascoltiamo insieme", inv:"Sei stato invitato ad ascoltare insieme su <b>iboxli</b>.", open:"Apri in iboxli",
+    it:{hint:"iboxli non si apre? Succede spesso se il link arriva da WhatsApp.", copy:"Copia codice", copied:"Codice copiato! Incollalo in iboxli ⋮ › <b>Insieme</b> › Ascolta.", retry:"Riprova in una nuova scheda",
+        t:"Ascoltiamo insieme", inv:"Sei stato invitato ad ascoltare insieme su <b>iboxli</b>.", open:"Apri in iboxli",
         man:"L’app non si apre? In iboxli tocca ⋮ › <b>Insieme</b> e inserisci il codice.",
         soon:"Non hai ancora iboxli? L’app arriva presto su Google Play.", get:"Scarica iboxli",
         wx:"Per aprire iboxli: tocca ··· in alto a destra e scegli «Apri nel browser»."},
-    es:{t:"Escuchar juntos", inv:"Te han invitado a escuchar juntos en <b>iboxli</b>.", open:"Abrir en iboxli",
+    es:{hint:"¿No se abre iboxli? Pasa a menudo cuando el enlace viene de WhatsApp.", copy:"Copiar código", copied:"¡Código copiado! Pégalo en iboxli ⋮ › <b>Juntos</b> › Escuchar.", retry:"Volver a intentarlo en una pestaña nueva",
+        t:"Escuchar juntos", inv:"Te han invitado a escuchar juntos en <b>iboxli</b>.", open:"Abrir en iboxli",
         man:"¿No se abre la app? En iboxli toca ⋮ › <b>Juntos</b> e introduce el código.",
         soon:"¿Aún no tienes iboxli? La app llegará pronto a Google Play.", get:"Descargar iboxli",
         wx:"Para abrir iboxli: toca ··· arriba a la derecha y elige «Abrir en el navegador»."},
-    ru:{t:"Слушать вместе", inv:"Вас пригласили слушать вместе в <b>iboxli</b>.", open:"Открыть в iboxli",
+    ru:{hint:"iboxli не открылся? Так часто бывает, если ссылка пришла из WhatsApp.", copy:"Скопировать код", copied:"Код скопирован! Вставьте его в iboxli ⋮ › <b>Вместе</b> › Слушать.", retry:"Попробовать в новой вкладке",
+        t:"Слушать вместе", inv:"Вас пригласили слушать вместе в <b>iboxli</b>.", open:"Открыть в iboxli",
         man:"Приложение не открывается? В iboxli нажмите ⋮ › <b>Вместе</b> и введите код.",
         soon:"Ещё нет iboxli? Приложение скоро появится в Google Play.", get:"Скачать iboxli",
         wx:"Чтобы открыть iboxli: нажмите ··· справа вверху и выберите «Открыть в браузере»."},
-    zh:{t:"一起听", inv:"你被邀请在 <b>iboxli</b> 上一起收听。", open:"在 iboxli 中打开",
+    zh:{hint:"iboxli 没有打开？链接来自 WhatsApp 时经常这样。", copy:"复制代码", copied:"代码已复制！在 iboxli ⋮ › <b>一起听</b> › 收听 中粘贴。", retry:"在新标签页中重试",
+        t:"一起听", inv:"你被邀请在 <b>iboxli</b> 上一起收听。", open:"在 iboxli 中打开",
         man:"应用没有打开？在 iboxli 中点击 ⋮ › <b>一起听</b>，然后输入代码。",
         soon:"还没有 iboxli？应用即将登陆 Google Play。", get:"下载 iboxli",
         wx:"要打开 iboxli：请点击右上角 ··· ，选择「在浏览器打开」。"},
-    hi:{t:"साथ में सुनें", inv:"आपको <b>iboxli</b> पर साथ सुनने के लिए आमंत्रित किया गया है।", open:"iboxli में खोलें",
+    hi:{hint:"iboxli नहीं खुला? WhatsApp से आए लिंक में अक्सर ऐसा होता है।", copy:"कोड कॉपी करें", copied:"कोड कॉपी हो गया! iboxli ⋮ › <b>साथ में</b> › सुनें में पेस्ट करें।", retry:"नए टैब में फिर से कोशिश करें",
+        t:"साथ में सुनें", inv:"आपको <b>iboxli</b> पर साथ सुनने के लिए आमंत्रित किया गया है।", open:"iboxli में खोलें",
         man:"ऐप नहीं खुल रहा? iboxli में ⋮ › <b>साथ में</b> पर टैप करें और कोड डालें।",
         soon:"अभी iboxli नहीं है? ऐप जल्द ही Google Play पर आ रहा है।", get:"iboxli डाउनलोड करें",
         wx:"iboxli खोलने के लिए: ऊपर दाईं ओर ··· पर टैप करें और “ब्राउज़र में खोलें” चुनें।"},
-    ar:{t:"استمعوا معًا", inv:"تمت دعوتك للاستماع معًا على <b>iboxli</b>.", open:"افتح في iboxli",
+    ar:{hint:"لم يفتح iboxli؟ يحدث هذا كثيرًا عندما يأتي الرابط من WhatsApp.", copy:"نسخ الرمز", copied:"تم نسخ الرمز! الصقه في iboxli ⋮ › <b>معًا</b> › استماع.", retry:"المحاولة مجددًا في علامة تبويب جديدة",
+        t:"استمعوا معًا", inv:"تمت دعوتك للاستماع معًا على <b>iboxli</b>.", open:"افتح في iboxli",
         man:"لا يفتح التطبيق؟ في iboxli اضغط ⋮ › <b>معًا</b> وأدخل الرمز.",
         soon:"لا تملك iboxli بعد؟ التطبيق قريبًا على Google Play.", get:"تنزيل iboxli",
         wx:"لفتح iboxli: اضغط ··· أعلى اليمين واختر «فتح في المتصفح»."}
@@ -117,6 +136,33 @@
   var intent = "intent://join?c=" + c + "#Intent;scheme=iboxli;package=com.iboxli.app;" +
                "S.browser_fallback_url=" + encodeURIComponent(fallback) + ";end";
   open.href = android && !wechat ? intent : "iboxli://join?c=" + c;
+
+  // Hilfe, falls nichts passiert (z. B. Chrome-Tab aus WhatsApp blockiert das Öffnen anderer Apps)
+  var help = document.getElementById("help");
+  document.getElementById("tHint").textContent = T.hint;
+  var copyBtn = document.getElementById("copy"); copyBtn.textContent = T.copy;
+  var retry = document.getElementById("retry"); retry.textContent = T.retry;
+  retry.href = location.pathname + "?c=" + c;
+  if (android && !wechat) open.addEventListener("click", function () {
+    var left = false;
+    function gone() { if (document.hidden) left = true; }
+    document.addEventListener("visibilitychange", gone);
+    window.addEventListener("blur", function b() { left = true; window.removeEventListener("blur", b); });
+    setTimeout(function () {
+      document.removeEventListener("visibilitychange", gone);
+      if (!left) help.style.display = "block";
+    }, 2000);
+  });
+  copyBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    function done() { document.getElementById("tCopied").innerHTML = T.copied; }
+    function fallbackCopy() {
+      var t = document.createElement("textarea"); t.value = c; document.body.appendChild(t); t.select();
+      try { document.execCommand("copy"); done(); } catch (x) {} document.body.removeChild(t);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(done, fallbackCopy);
+    else fallbackCopy();
+  });
 
   // Ohne App: Hinweis auf den Play Store (bzw. „bald verfügbar“)
   var noApp = document.getElementById("tNoApp");
